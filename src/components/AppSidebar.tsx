@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Target, Calendar, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { Target, Calendar, BookOpen, ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { icon: Target, path: "/workspace", label: "Goals" },
@@ -52,13 +52,24 @@ const AppSidebar = () => {
         })}
       </nav>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex h-grid-5 items-center justify-center border-t border-boundary text-muted-foreground hover:text-primary"
-      >
-        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
+      {/* Dark mode + Collapse */}
+      <div className="flex flex-col border-t border-boundary">
+        <button
+          onClick={() => {
+            document.documentElement.classList.toggle("dark");
+          }}
+          className="flex h-grid-5 items-center justify-center text-muted-foreground hover:text-primary"
+        >
+          <Sun size={14} className="hidden dark:block" />
+          <Moon size={14} className="block dark:hidden" />
+        </button>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex h-grid-5 items-center justify-center text-muted-foreground hover:text-primary"
+        >
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+      </div>
     </motion.aside>
   );
 };
