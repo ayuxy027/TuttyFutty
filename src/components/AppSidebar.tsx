@@ -1,12 +1,30 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Target, Calendar, BookOpen, ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
-import { useState, useEffect } from "react";
+import {
+  Target, Calendar, BookOpen, ChevronLeft, ChevronRight,
+  Moon, Sun, PenLine, ListChecks, Repeat, Layers, BarChart3,
+} from "lucide-react";
+import { useState } from "react";
 
-const navItems = [
-  { icon: Target, path: "/workspace", label: "Goals" },
-  { icon: Calendar, path: "/workspace/calendar", label: "Calendar" },
-  { icon: BookOpen, path: "/workspace/practice", label: "Practice" },
+const navSections = [
+  {
+    label: "Learn",
+    items: [
+      { icon: Target, path: "/workspace", label: "Goals" },
+      { icon: Calendar, path: "/workspace/calendar", label: "Calendar" },
+      { icon: BookOpen, path: "/workspace/practice", label: "Practice" },
+      { icon: Layers, path: "/workspace/flashcards", label: "Flashcards" },
+    ],
+  },
+  {
+    label: "Productivity",
+    items: [
+      { icon: ListChecks, path: "/workspace/planner", label: "Planner" },
+      { icon: Repeat, path: "/workspace/habits", label: "Habits" },
+      { icon: PenLine, path: "/workspace/journal", label: "Journal" },
+      { icon: BarChart3, path: "/workspace/review", label: "Review" },
+    ],
+  },
 ];
 
 const AppSidebar = () => {
@@ -23,41 +41,46 @@ const AppSidebar = () => {
       {/* Logo */}
       <div className="flex h-grid-6 items-center border-b border-boundary px-grid-2">
         {!collapsed && (
-          <span className="font-mono text-xs font-semibold text-primary">
-            TuttyFutty
-          </span>
+          <span className="font-mono text-xs font-semibold text-primary">TuttyFutty</span>
         )}
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col gap-grid px-grid py-grid-2">
-        {navItems.map(({ icon: Icon, path, label }) => {
-          const isActive = location.pathname === path;
-          return (
-            <button
-              key={path}
-              onClick={() => navigate(path)}
-              className={`flex items-center gap-grid-2 rounded-lg px-grid-2 py-grid transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-accent"
-              }`}
-            >
-              <Icon size={16} strokeWidth={1.5} />
-              {!collapsed && (
-                <span className="font-mono text-xs">{label}</span>
-              )}
-            </button>
-          );
-        })}
+      <nav className="flex flex-1 flex-col gap-grid-2 overflow-y-auto px-grid py-grid-2">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            {!collapsed && (
+              <span className="mb-grid block px-grid font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                {section.label}
+              </span>
+            )}
+            <div className="flex flex-col gap-[2px]">
+              {section.items.map(({ icon: Icon, path, label }) => {
+                const isActive = location.pathname === path;
+                return (
+                  <button
+                    key={path}
+                    onClick={() => navigate(path)}
+                    className={`flex items-center gap-grid-2 rounded-lg px-grid-2 py-grid transition-colors ${
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <Icon size={14} strokeWidth={1.5} />
+                    {!collapsed && <span className="font-mono text-[11px]">{label}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Dark mode + Collapse */}
       <div className="flex flex-col border-t border-boundary">
         <button
-          onClick={() => {
-            document.documentElement.classList.toggle("dark");
-          }}
+          onClick={() => document.documentElement.classList.toggle("dark")}
           className="flex h-grid-5 items-center justify-center text-muted-foreground hover:text-primary"
         >
           <Sun size={14} className="hidden dark:block" />
