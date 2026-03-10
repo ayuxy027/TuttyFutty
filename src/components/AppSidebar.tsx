@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Target, Calendar, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { Target, Calendar, BookOpen, ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { icon: Target, path: "/workspace", label: "Goals" },
