@@ -55,6 +55,52 @@
     --header-h: 28px;
     --grid-unit: 8px;
   }
+
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 70%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 70%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 70%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 7%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 0 0% 100%;
+
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 70%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 0 0% 100%;
+
+    --cell-bg: 0 0% 10%;
+    --cell-border: 0 0% 16%;
+    --ink: 0 0% 100%;
+    --content: 0 0% 70%;
+    --ground: 0 0% 9%;
+    --boundary: 0 0% 16%;
+  }
 }
 
 @layer base {
