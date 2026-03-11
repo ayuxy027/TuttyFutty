@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { format, subDays, addDays } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Frown, Meh, Smile, Sparkles, Heart } from "lucide-react";
 
-const moodEmojis = ["😤", "😔", "😐", "🙂", "😊", "🔥"];
+const moodIcons = [
+  { icon: Frown, label: "Terrible" },
+  { icon: Frown, label: "Bad" },
+  { icon: Meh, label: "Okay" },
+  { icon: Smile, label: "Good" },
+  { icon: Sparkles, label: "Great" },
+  { icon: Heart, label: "Amazing" },
+];
 
 interface JournalEntry {
   id: string;
@@ -15,47 +22,19 @@ interface JournalEntry {
   createdAt: string;
 }
 
-const mockEntries: Record<string, JournalEntry> = {
-  "2026-03-10": {
-    id: "1",
-    date: "2026-03-10",
-    mood: 4,
-    gratitude: "Had a productive morning session on distributed systems. Coffee was perfect.",
-    reflection: "Need to spend more time on Raft consensus — the leader election part is still fuzzy. Tomorrow I'll focus on that specifically.",
-    wins: ["Finished 2 sprint steps", "30 min meditation", "Read 20 pages"],
-    createdAt: "2026-03-10T08:00:00Z",
-  },
-  "2026-03-09": {
-    id: "2",
-    date: "2026-03-09",
-    mood: 3,
-    gratitude: "Weekend rest. Recharged for the week ahead.",
-    reflection: "Took it easy today. Sometimes that's the most productive thing.",
-    wins: ["Journaled", "Walked 5km"],
-    createdAt: "2026-03-09T10:00:00Z",
-  },
-};
-
 const Journal = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const dateStr = format(currentDate, "yyyy-MM-dd");
-  const entry = mockEntries[dateStr];
 
-  const [mood, setMood] = useState(entry?.mood ?? -1);
-  const [gratitude, setGratitude] = useState(entry?.gratitude ?? "");
-  const [reflection, setReflection] = useState(entry?.reflection ?? "");
-  const [wins, setWins] = useState<string[]>(entry?.wins ?? [""]);
+  const [mood, setMood] = useState(-1);
+  const [gratitude, setGratitude] = useState("");
+  const [reflection, setReflection] = useState("");
+  const [wins, setWins] = useState<string[]>([]);
   const [newWin, setNewWin] = useState("");
 
   const navigateDate = (dir: number) => {
     const next = dir > 0 ? addDays(currentDate, 1) : subDays(currentDate, 1);
     setCurrentDate(next);
-    const key = format(next, "yyyy-MM-dd");
-    const e = mockEntries[key];
-    setMood(e?.mood ?? -1);
-    setGratitude(e?.gratitude ?? "");
-    setReflection(e?.reflection ?? "");
-    setWins(e?.wins ?? [""]);
   };
 
   const addWin = () => {
@@ -66,7 +45,6 @@ const Journal = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-boundary px-grid-3 py-grid-2">
         <h2 className="font-mono text-sm font-semibold text-primary">Journal</h2>
         <div className="flex items-center gap-grid-2">
@@ -84,30 +62,29 @@ const Journal = () => {
 
       <div className="flex-1 overflow-y-auto px-grid-3 py-grid-3">
         <div className="mx-auto flex max-w-[560px] flex-col gap-grid-3">
-          {/* Mood selector */}
           <div className="rounded-lg border border-boundary bg-cell p-grid-3">
             <span className="mb-grid-2 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               Mood
             </span>
             <div className="flex gap-grid-2">
-              {moodEmojis.map((emoji, i) => (
+              {moodIcons.map((item, i) => (
                 <motion.button
                   key={i}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setMood(i)}
+                  title={item.label}
                   className={`flex h-grid-5 w-grid-5 items-center justify-center rounded-lg border text-base transition-colors ${
                     mood === i
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-boundary hover:border-primary"
                   }`}
                 >
-                  {emoji}
+                  <item.icon size={18} />
                 </motion.button>
               ))}
             </div>
           </div>
 
-          {/* Gratitude */}
           <div className="rounded-lg border border-boundary bg-cell p-grid-3">
             <span className="mb-grid-2 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               Gratitude
@@ -120,7 +97,6 @@ const Journal = () => {
             />
           </div>
 
-          {/* Wins */}
           <div className="rounded-lg border border-boundary bg-cell p-grid-3">
             <span className="mb-grid-2 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               Today's Wins
@@ -147,7 +123,6 @@ const Journal = () => {
             </div>
           </div>
 
-          {/* Reflection */}
           <div className="rounded-lg border border-boundary bg-cell p-grid-3">
             <span className="mb-grid-2 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               Reflection
