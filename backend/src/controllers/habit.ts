@@ -112,10 +112,9 @@ class HabitController extends BaseController {
       return;
     }
     
-    const log = db.create("habit_logs", { 
-      habit_id: id, 
+    const log = db.create("habit_logs", {
+      habit_id: id,
       notes: notes || null,
-      user_id: userId 
     });
     this.created(res, log);
   });

@@ -11,11 +11,11 @@ const passwordSchema = z.string().refine(
   { message: "Password must be exactly 4 digits" }
 );
 
-// Name validation - required
+// Name validation - required (lenient)
 const nameSchema = z.string()
   .min(2, "Name must be at least 2 characters")
   .max(50, "Name must be less than 50 characters")
-  .regex(/^[a-zA-Z\u00C0-\u00FF][a-zA-Z\u00C0-\u00FF\s'-]*[a-zA-Z\u00C0-\u00FF]$/, "Name can only contain letters, spaces, hyphens, and apostrophes");
+  .transform(val => val.trim());
 
 const registerSchema = z.object({
   email: z.string().email().max(254),

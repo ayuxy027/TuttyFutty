@@ -23,7 +23,9 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     return {} as T;
   }
 
-  return response.json();
+  const json = await response.json();
+  // Unwrap the data field if the response has {data: ...} structure
+  return (json.data !== undefined ? json.data : json) as T;
 }
 
 // ============================================

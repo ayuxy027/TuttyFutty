@@ -55,10 +55,11 @@ export function rateLimit(options: RateLimitOptions) {
  */
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 5, // 5 attempts per window
+  maxRequests: 20, // 20 attempts per window (increased for dev)
   keyGenerator: (req) => {
     return `auth:${req.ip}:${req.body.email || req.body.username || "unknown"}`;
   },
+  skipSuccessfulRequests: true, // Don't count successful requests
 });
 
 /**

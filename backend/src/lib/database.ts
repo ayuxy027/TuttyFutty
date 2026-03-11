@@ -39,22 +39,30 @@ function runMigrations(database: Database): void {
   }
 
   const schema = fs.readFileSync(schemaPath, "utf-8");
-  
-  // Split by semicolons and execute each statement
-  const statements = schema
-    .split(";")
-    .map(s => s.trim())
-    .filter(s => s.length > 0 && !s.startsWith("--"));
 
-  for (const statement of statements) {
-    try {
-      database.exec(statement);
-    } catch (error) {
-      console.warn("Migration statement failed:", statement.substring(0, 50), error);
+  // Execute the entire schema as one transaction
+  // This ensures tables are created before indexes
+  try {
+    database.exec(schema);
+    console.log("Migrations run successfully");
+  } catch (error) {
+    console.error("Migration failed:", error);
+    // If full execution fails, fall back to statement-by-statement
+    const statements = schema
+      .split(";")
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !s.startsWith("--") && !s.startsWith("-- "));
+
+    for (const statement of statements) {
+      try {
+        database.exec(statement);
+      } catch (err) {
+        // Only warn, don't fail - "IF NOT EXISTS" handles most issues
+        console.warn("Migration statement warning:", statement.substring(0, 60), (err as Error).message);
+      }
     }
+    console.log("Migrations completed with fallback method");
   }
-  
-  console.log("Migrations run successfully");
 }
 
 export function closeDatabase(): void {
