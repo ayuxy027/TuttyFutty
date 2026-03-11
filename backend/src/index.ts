@@ -1,11 +1,11 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { env } from "./config/UEnv.js";
-import { logger, errorHandler, notFoundHandler, securityHeaders, sanitizeInput } from "./middleware/UIndex.js";
-import routes from "./routes/UIndex.js";
-import { initDatabase, closeDatabase } from "./lib/UDatabase.js";
-import { initGemini } from "./lib/UGemini.js";
+import { env } from "./config/env.js";
+import { logger, errorHandler, notFoundHandler, securityHeaders, sanitizeInput } from "./middleware/index.js";
+import routes from "./routes/index.js";
+import { initDatabase, closeDatabase } from "./lib/database.js";
+import { initGemini } from "./lib/gemini.js";
 
 const app = express();
 
