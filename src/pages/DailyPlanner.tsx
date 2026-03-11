@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check, Trash2, Clock, Flag } from "lucide-react";
+import { Plus, Check, Trash2, Clock } from "lucide-react";
 import { format } from "date-fns";
 
 type Priority = "low" | "medium" | "high";
@@ -19,16 +19,8 @@ const priorityStyles: Record<Priority, string> = {
   high: "border-primary",
 };
 
-const mockTasks: Task[] = [
-  { id: "1", text: "Review Raft consensus notes", done: true, priority: "high", timeBlock: "09:00" },
-  { id: "2", text: "Complete Sprint Step 3 quizzes", done: false, priority: "high", timeBlock: "10:00" },
-  { id: "3", text: "Read Chapter 8 — Fault Tolerance", done: false, priority: "medium", timeBlock: "14:00" },
-  { id: "4", text: "Journal reflection", done: false, priority: "low", timeBlock: "20:00" },
-  { id: "5", text: "Prepare interview questions for Paxos", done: false, priority: "medium" },
-];
-
 const DailyPlanner = () => {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [newText, setNewText] = useState("");
   const [newPriority, setNewPriority] = useState<Priority>("medium");
 
@@ -53,11 +45,10 @@ const DailyPlanner = () => {
       <div className="flex items-center justify-between border-b border-boundary px-grid-3 py-grid-2">
         <h2 className="font-mono text-sm font-semibold text-primary">Planner</h2>
         <span className="font-mono text-[10px] text-muted-foreground">
-          {format(new Date(), "EEE, MMM d")} · {doneCount}/{tasks.length}
+          {format(new Date(), "EEE, MMM d")} - {doneCount}/{tasks.length}
         </span>
       </div>
 
-      {/* Progress */}
       <div className="h-[2px] bg-boundary">
         <motion.div
           className="h-full bg-primary"
@@ -68,7 +59,6 @@ const DailyPlanner = () => {
 
       <div className="flex-1 overflow-y-auto px-grid-3 py-grid-3">
         <div className="mx-auto flex max-w-[560px] flex-col gap-grid">
-          {/* Time-blocked tasks first */}
           <AnimatePresence mode="popLayout">
             {tasks
               .sort((a, b) => {
@@ -88,7 +78,6 @@ const DailyPlanner = () => {
                     priorityStyles[task.priority]
                   } ${task.done ? "opacity-50" : ""}`}
                 >
-                  {/* Checkbox */}
                   <button
                     onClick={() => toggle(task.id)}
                     className={`flex h-grid-2 w-grid-2 flex-shrink-0 items-center justify-center rounded border transition-colors ${
@@ -100,7 +89,6 @@ const DailyPlanner = () => {
                     {task.done && <Check size={8} className="text-primary-foreground" />}
                   </button>
 
-                  {/* Time block */}
                   {task.timeBlock && (
                     <span className="flex items-center gap-[2px] font-mono text-[10px] text-muted-foreground">
                       <Clock size={8} />
@@ -108,7 +96,6 @@ const DailyPlanner = () => {
                     </span>
                   )}
 
-                  {/* Text */}
                   <span
                     className={`flex-1 font-body text-xs ${
                       task.done ? "text-muted-foreground line-through" : "text-foreground"
@@ -117,11 +104,9 @@ const DailyPlanner = () => {
                     {task.text}
                   </span>
 
-                  {/* Delete */}
                   <button
                     onClick={() => remove(task.id)}
-                    className="flex-shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-                    style={{ opacity: undefined }}
+                    className="flex-shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive"
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
                   >
@@ -131,7 +116,13 @@ const DailyPlanner = () => {
               ))}
           </AnimatePresence>
 
-          {/* Add task */}
+          {tasks.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-grid-4 text-center">
+              <p className="font-mono text-xs text-muted-foreground">No tasks yet</p>
+              <p className="font-mono text-[10px] text-muted-foreground">Add your first task below</p>
+            </div>
+          )}
+
           <div className="flex gap-grid">
             <div className="flex gap-grid rounded-lg border border-boundary bg-cell p-grid">
               {(["low", "medium", "high"] as Priority[]).map((p) => (
