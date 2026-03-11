@@ -6,10 +6,6 @@ const SAMPLES = [
   "sync call with josh",
   "interview at 2 PM",
   "review auden's pull request",
-  "finish the quarterly report",
-  "team standup tomorrow",
-  "dentist appointment Friday",
-  "send invoice to client",
 ];
 
 const simpleEncrypt = (text: string): string => {
@@ -27,30 +23,38 @@ const Encryption = () => {
   const [encrypted, setEncrypted] = useState("");
   const sampleIndex = useRef(0);
   const charIndex = useRef(0);
-  const isTyping = useRef(true);
+  const phase = useRef<"typing" | "waiting" | "clearing">("typing");
 
   useEffect(() => {
-    const typeNext = () => {
+    let timeout: NodeJS.Timeout;
+
+    const tick = () => {
       const sample = SAMPLES[sampleIndex.current];
-      
-      if (charIndex.current < sample.length) {
-        setInput(sample.slice(0, charIndex.current + 1));
-        charIndex.current += 1;
-      } else {
-        setTimeout(() => {
-          charIndex.current = 0;
-          sampleIndex.current = (sampleIndex.current + 1) % SAMPLES.length;
-          typeNext();
-        }, 1500);
-        isTyping.current = false;
+
+      if (phase.current === "typing") {
+        if (charIndex.current < sample.length) {
+          setInput(sample.slice(0, charIndex.current + 1));
+          charIndex.current += 1;
+          timeout = setTimeout(tick, 80);
+        } else {
+          phase.current = "waiting";
+          timeout = setTimeout(tick, 1500);
+        }
+      } else if (phase.current === "waiting") {
+        phase.current = "clearing";
+        setInput("");
+        charIndex.current = 0;
+        timeout = setTimeout(tick, 300);
+      } else if (phase.current === "clearing") {
+        sampleIndex.current = (sampleIndex.current + 1) % SAMPLES.length;
+        phase.current = "typing";
+        timeout = setTimeout(tick, 200);
       }
     };
 
-    if (isTyping.current) {
-      const timeout = setTimeout(typeNext, 100);
-      return () => clearTimeout(timeout);
-    }
-  }, [input]);
+    timeout = setTimeout(tick, 500);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     if (input.trim()) {
