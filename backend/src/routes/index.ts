@@ -1,16 +1,16 @@
 import { Router } from "express";
-import healthRoutes from "./health.js";
-import authRoutes from "./auth.js";
-import aiRoutes from "./ai.js";
-import aiConversationRoutes from "./aiConversation.js";
-import userSessionRoutes from "./userSession.js";
-import goalRoutes from "./goal.js";
-import taskRoutes from "./task.js";
-import habitRoutes from "./habit.js";
-import journalRoutes from "./journal.js";
-import flashcardRoutes from "./flashcard.js";
-import sessionRoutes from "./session.js";
-import dailyPlanRoutes from "./dailyPlan.js";
+import healthRoutes from "./Health.js";
+import authRoutes from "./Auth.js";
+import aiRoutes from "./Ai.js";
+import aiConversationRoutes from "./AiConversation.js";
+import userSessionRoutes from "./UserSession.js";
+import goalRoutes from "./Goal.js";
+import taskRoutes from "./Task.js";
+import habitRoutes from "./Habit.js";
+import journalRoutes from "./Journal.js";
+import flashcardRoutes from "./Flashcard.js";
+import sessionRoutes from "./Session.js";
+import dailyPlanRoutes from "./DailyPlan.js";
 
 const router = Router();
 

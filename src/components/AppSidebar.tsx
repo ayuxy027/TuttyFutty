@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import {
   Target, Calendar, BookOpen, ChevronLeft, ChevronRight,
   Moon, Sun, PenLine, ListChecks, Repeat, Layers, BarChart3,
-  Heart,
+  Heart, LogOut,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 const navSections = [
   {
@@ -38,6 +39,12 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <motion.aside
@@ -84,7 +91,7 @@ const AppSidebar = () => {
         ))}
       </nav>
 
-      {/* Dark mode + Collapse */}
+      {/* Dark mode + Collapse + Logout */}
       <div className="flex flex-col border-t border-boundary">
         <button
           onClick={() => document.documentElement.classList.toggle("dark")}
@@ -92,6 +99,13 @@ const AppSidebar = () => {
         >
           <Sun size={14} className="hidden dark:block" />
           <Moon size={14} className="block dark:hidden" />
+        </button>
+        <button
+          onClick={handleLogout}
+          className="flex h-grid-5 items-center justify-center text-muted-foreground hover:text-primary"
+          title="Logout"
+        >
+          <LogOut size={14} />
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}

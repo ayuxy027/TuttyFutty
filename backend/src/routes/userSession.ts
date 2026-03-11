@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { userSessionController } from "../controllers/index.js";
+import { userSessionController } from "../controllers/Index.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { validateParams } from "../middleware/index.js";
 import { z } from "zod";

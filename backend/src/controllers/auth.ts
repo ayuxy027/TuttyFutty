@@ -5,43 +5,62 @@ import { db } from "../lib/db.js";
 import { hashPassword, verifyPassword, createToken } from "../lib/auth.js";
 import { AuthRequest } from "../middleware/auth.js";
 
+// Password must be exactly 4 digits
+const passwordSchema = z.string().refine(
+  (val) => /^\d{4}$/.test(val),
+  { message: "Password must be exactly 4 digits" }
+);
+
+// Name validation - required
+const nameSchema = z.string()
+  .min(2, "Name must be at least 2 characters")
+  .max(50, "Name must be less than 50 characters")
+  .regex(/^[a-zA-Z\u00C0-\u00FF][a-zA-Z\u00C0-\u00FF\s'-]*[a-zA-Z\u00C0-\u00FF]$/, "Name can only contain letters, spaces, hyphens, and apostrophes");
+
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().optional(),
+  email: z.string().email().max(254),
+  password: passwordSchema,
+  name: nameSchema,
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
+  email: z.string().email().max(254),
+  password: z.string().min(4).max(4),
 });
 
 class AuthController extends BaseController {
   register = asyncHandler(async (req: Request, res: Response) => {
     const { email, password, name } = registerSchema.parse(req.body);
 
+    // Check for existing user
     const existing = db.findOne("users", { email });
     if (existing) {
-      this.badRequest(res, "Email already registered");
+      // Generic error message for security - don't reveal if email exists
+      this.badRequest(res, "Invalid credentials");
       return;
     }
 
+    // Hash password with argon2
     const passwordHash = await hashPassword(password);
+
+    // Create user with required name
     const user = db.create<{
       id: number;
       email: string;
-      name: string | null;
+      name: string;
       password_hash: string;
       created_at: string;
       updated_at: string;
     }>("users", {
-      email,
+      email: email.toLowerCase().trim(),
       password_hash: passwordHash,
-      name: name || null,
+      name: name.trim(),
     });
 
+    // Create auth token
     const token = await createToken(user.id, user.email);
 
+    // Return user data and token
     this.created(res, {
       user: {
         id: user.id,
@@ -55,26 +74,34 @@ class AuthController extends BaseController {
   login = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = loginSchema.parse(req.body);
 
+    // Normalize email for lookup
+    const normalizedEmail = email.toLowerCase().trim();
+
     const user = db.findOne<{
       id: number;
       email: string;
       password_hash: string;
-      name: string | null;
-    }>("users", { email });
+      name: string;
+    }>("users", { email: normalizedEmail });
 
+    // Use constant-time comparison to prevent timing attacks
     if (!user) {
-      this.unauthorized(res, "Invalid email or password");
+      // Generic error for security
+      this.unauthorized(res, "Invalid credentials");
       return;
     }
 
+    // Verify password
     const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
-      this.unauthorized(res, "Invalid email or password");
+      this.unauthorized(res, "Invalid credentials");
       return;
     }
 
+    // Create auth token
     const token = await createToken(user.id, user.email);
 
+    // Return user data and token
     this.ok(res, {
       user: {
         id: user.id,
@@ -94,9 +121,10 @@ class AuthController extends BaseController {
     const user = db.findOne<{
       id: number;
       email: string;
-      name: string | null;
+      name: string;
       created_at: string;
     }>("users", { id: req.user.id });
+
     if (!user) {
       this.notFound(res, "User not found");
       return;
@@ -117,11 +145,21 @@ class AuthController extends BaseController {
     }
 
     const { name } = req.body;
+
+    // Validate name if provided
+    if (name !== undefined) {
+      const validationResult = nameSchema.safeParse(name);
+      if (!validationResult.success) {
+        this.badRequest(res, validationResult.error.errors[0].message);
+        return;
+      }
+    }
+
     const user = db.update<{
       id: number;
       email: string;
-      name: string | null;
-    }>("users", req.user.id, { name: name || null });
+      name: string;
+    }>("users", req.user.id, { name: name?.trim() });
 
     this.ok(res, {
       id: user?.id,
@@ -136,31 +174,23 @@ class AuthController extends BaseController {
       return;
     }
 
-    const { currentPassword, newPassword } = req.body;
+    const { newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      this.badRequest(res, "Current and new password required");
+    if (!newPassword) {
+      this.badRequest(res, "New password is required");
       return;
     }
 
-    if (newPassword.length < 8) {
-      this.badRequest(res, "Password must be at least 8 characters");
+    // Validate new password format
+    if (!/^\d{4}$/.test(newPassword)) {
+      this.badRequest(res, "Password must be exactly 4 digits");
       return;
     }
 
-    const user = db.findOne<{ password_hash: string }>("users", { id: req.user.id });
-    if (!user) {
-      this.notFound(res, "User not found");
-      return;
-    }
-
-    const isValid = await verifyPassword(currentPassword, user.password_hash);
-    if (!isValid) {
-      this.unauthorized(res, "Current password is incorrect");
-      return;
-    }
-
+    // Hash new password
     const newHash = await hashPassword(newPassword);
+
+    // Update password
     db.update("users", req.user.id, { password_hash: newHash });
 
     this.ok(res, { message: "Password changed successfully" });

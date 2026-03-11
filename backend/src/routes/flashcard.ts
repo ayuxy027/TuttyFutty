@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { flashcardController } from "../controllers/index.js";
+import { flashcardController } from "../controllers/Index.js";
 import { validateBody, validateParams } from "../middleware/index.js";
 import { optionalAuthMiddleware } from "../middleware/auth.js";
 import { z } from "zod";

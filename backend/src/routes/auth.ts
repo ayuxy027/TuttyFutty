@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authController } from "../controllers/index.js";
+import { authController } from "../controllers/Index.js";
 import { validateBody } from "../middleware/index.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { z } from "zod";

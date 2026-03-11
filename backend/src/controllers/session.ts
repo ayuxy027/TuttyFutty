@@ -15,20 +15,35 @@ const sessionSchema = z.object({
 });
 
 class SessionController extends BaseController {
-  getAll = asyncHandler(async (_req: AuthRequest, res: Response) => {
-    const sessions = db.findMany("sessions", {});
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.ok(res, []);
+      return;
+    }
+    const sessions = db.query("SELECT * FROM sessions WHERE user_id = ? ORDER BY session_date DESC", userId);
     this.ok(res, sessions);
   });
 
   getByDate = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.ok(res, []);
+      return;
+    }
     const date = req.params.date;
-    const sessions = db.findMany("sessions", { session_date: date });
+    const sessions = db.query("SELECT * FROM sessions WHERE user_id = ? AND session_date = ?", [userId, date]);
     this.ok(res, sessions);
   });
 
   getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Session not found");
+      return;
+    }
     const id = parseInt(req.params.id);
-    const session = db.findOne("sessions", { id });
+    const session = db.findOne("sessions", { id, user_id: userId });
     if (!session) {
       this.notFound(res, "Session not found");
       return;
@@ -37,54 +52,71 @@ class SessionController extends BaseController {
   });
 
   create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.unauthorized(res, "Authentication required");
+      return;
+    }
     const data = sessionSchema.parse(req.body);
     const session = db.create("sessions", {
       ...data,
-      user_id: req.user?.id || null,
+      user_id: userId,
     });
     this.created(res, session);
   });
 
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const id = parseInt(req.params.id);
-    const data = sessionSchema.partial().parse(req.body);
-    const session = db.update("sessions", id, data);
-    if (!session) {
+    const userId = req.user?.id;
+    if (!userId) {
       this.notFound(res, "Session not found");
       return;
     }
+    const id = parseInt(req.params.id);
+    const existing = db.findOne("sessions", { id, user_id: userId });
+    if (!existing) {
+      this.notFound(res, "Session not found");
+      return;
+    }
+    const data = sessionSchema.partial().parse(req.body);
+    const session = db.update("sessions", id, data);
     this.ok(res, session);
   });
 
   delete = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Session not found");
+      return;
+    }
     const id = parseInt(req.params.id);
+    const existing = db.findOne("sessions", { id, user_id: userId });
+    if (!existing) {
+      this.notFound(res, "Session not found");
+      return;
+    }
     db.delete("sessions", id);
     this.noContent(res);
   });
 
   getStats = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
+    if (!userId) {
+      this.ok(res, { count: 0, minutes: 0 });
+      return;
+    }
     
     // Get sessions for the last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const dateStr = sevenDaysAgo.toISOString().split('T')[0];
 
-    let sessions;
-    if (userId) {
-      sessions = db.query(
-        "SELECT * FROM sessions WHERE user_id = ? AND session_date >= ?",
-        [userId, dateStr]
-      );
-    } else {
-      sessions = db.query(
-        "SELECT * FROM sessions WHERE session_date >= ?",
-        [dateStr]
-      );
-    }
+    const sessions = db.query<{ duration_minutes: number | null }>(
+      "SELECT * FROM sessions WHERE user_id = ? AND session_date >= ?",
+      [userId, dateStr]
+    );
 
     const count = sessions.length;
-    const minutes = sessions.reduce((sum: number, s: { duration_minutes: number | null }) => {
+    const minutes = sessions.reduce((sum: number, s) => {
       return sum + (s.duration_minutes || 0);
     }, 0);
 

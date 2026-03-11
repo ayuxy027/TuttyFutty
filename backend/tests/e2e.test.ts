@@ -45,8 +45,8 @@ describe("E2E Tests - SQLite Database Coverage", () => {
   describe("Auth CRUD", () => {
     const testUser = {
       email: `test_${Date.now()}@example.com`,
-      password: "testpassword123",
-      name: "Test User",
+      password: "1234",
+      name: "John Doe",
     };
 
     it("should register a new user", async () => {
@@ -74,7 +74,7 @@ describe("E2E Tests - SQLite Database Coverage", () => {
     it("should fail login with invalid credentials", async () => {
       const res = await request(app)
         .post(`${API_BASE}/auth/login`)
-        .send({ email: testUser.email, password: "wrongpassword" });
+        .send({ email: testUser.email, password: "0000" });
       
       expect(res.status).toBe(401);
     });

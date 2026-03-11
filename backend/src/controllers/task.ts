@@ -15,14 +15,24 @@ const taskSchema = z.object({
 });
 
 class TaskController extends BaseController {
-  getAll = asyncHandler(async (_req: AuthRequest, res: Response) => {
-    const tasks = db.findMany("tasks", {});
+  getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.ok(res, []);
+      return;
+    }
+    const tasks = db.query("SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC", userId);
     this.ok(res, tasks);
   });
 
   getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Task not found");
+      return;
+    }
     const id = parseInt(req.params.id);
-    const task = db.findOne("tasks", { id });
+    const task = db.findOne("tasks", { id, user_id: userId });
     if (!task) {
       this.notFound(res, "Task not found");
       return;
@@ -31,6 +41,11 @@ class TaskController extends BaseController {
   });
 
   create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.unauthorized(res, "Authentication required");
+      return;
+    }
     const data = taskSchema.parse(req.body);
     // Filter out undefined values
     const filteredData: Record<string, unknown> = {};
@@ -41,13 +56,23 @@ class TaskController extends BaseController {
     }
     const task = db.create("tasks", {
       ...filteredData,
-      user_id: req.user?.id || null,
+      user_id: userId,
     });
     this.created(res, task);
   });
 
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Task not found");
+      return;
+    }
     const id = parseInt(req.params.id);
+    const existing = db.findOne("tasks", { id, user_id: userId });
+    if (!existing) {
+      this.notFound(res, "Task not found");
+      return;
+    }
     const data = taskSchema.partial().parse(req.body);
     // Filter out undefined values
     const filteredData: Record<string, unknown> = {};
@@ -57,41 +82,43 @@ class TaskController extends BaseController {
       }
     }
     const task = db.update("tasks", id, filteredData);
-    if (!task) {
-      this.notFound(res, "Task not found");
-      return;
-    }
     this.ok(res, task);
   });
 
   delete = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Task not found");
+      return;
+    }
     const id = parseInt(req.params.id);
+    const existing = db.findOne("tasks", { id, user_id: userId });
+    if (!existing) {
+      this.notFound(res, "Task not found");
+      return;
+    }
     db.delete("tasks", id);
     this.noContent(res);
   });
 
   getStats = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
+    if (!userId) {
+      this.ok(res, { completed: 0, total: 0 });
+      return;
+    }
     
     // Get tasks for the last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const dateStr = sevenDaysAgo.toISOString().split('T')[0];
 
-    let tasks;
-    if (userId) {
-      tasks = db.query(
-        "SELECT * FROM tasks WHERE user_id = ? AND created_at >= ?",
-        [userId, dateStr]
-      );
-    } else {
-      tasks = db.query(
-        "SELECT * FROM tasks WHERE created_at >= ?",
-        [dateStr]
-      );
-    }
+    const tasks = db.query<{ status: string }>(
+      "SELECT * FROM tasks WHERE user_id = ? AND created_at >= ?",
+      [userId, dateStr]
+    );
 
-    const completed = tasks.filter((t: { status: string }) => t.status === 'completed').length;
+    const completed = tasks.filter((t) => t.status === 'completed').length;
     const total = tasks.length;
 
     this.ok(res, { completed, total });

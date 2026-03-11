@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { journalController } from "../controllers/index.js";
+import { journalController } from "../controllers/Index.js";
 import { validateBody, validateParams } from "../middleware/index.js";
 import { optionalAuthMiddleware } from "../middleware/auth.js";
 import { z } from "zod";

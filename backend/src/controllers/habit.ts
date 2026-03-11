@@ -18,19 +18,22 @@ const habitIdSchema = z.object({
 class HabitController extends BaseController {
   getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
-    const habits = userId 
-      ? db.query("SELECT * FROM habits WHERE user_id = ? OR user_id IS NULL ORDER BY created_at DESC", userId)
-      : db.findMany("habits", {});
+    if (!userId) {
+      this.ok(res, []);
+      return;
+    }
+    const habits = db.query("SELECT * FROM habits WHERE user_id = ? ORDER BY created_at DESC", userId);
     this.ok(res, habits);
   });
 
   getById = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { id } = habitIdSchema.parse(req.params);
     const userId = req.user?.id;
-    
-    const habit = userId
-      ? db.findOne("habits", { id, user_id: userId })
-      : db.findOne("habits", { id });
+    if (!userId) {
+      this.notFound(res, "Habit not found");
+      return;
+    }
+    const { id } = habitIdSchema.parse(req.params);
+    const habit = db.findOne("habits", { id, user_id: userId });
     
     if (!habit) {
       this.notFound(res, "Habit not found");
@@ -41,22 +44,29 @@ class HabitController extends BaseController {
   });
 
   create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.unauthorized(res, "Authentication required");
+      return;
+    }
     const data = habitSchema.parse(req.body);
     const habit = db.create("habits", {
       ...data,
-      user_id: req.user?.id || null,
+      user_id: userId,
     });
     this.created(res, habit);
   });
 
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Habit not found");
+      return;
+    }
     const { id } = habitIdSchema.parse(req.params);
     const data = habitSchema.partial().parse(req.body);
-    const userId = req.user?.id;
     
-    const existing = userId
-      ? db.findOne("habits", { id, user_id: userId })
-      : db.findOne("habits", { id });
+    const existing = db.findOne("habits", { id, user_id: userId });
       
     if (!existing) {
       this.notFound(res, "Habit not found");
@@ -68,12 +78,14 @@ class HabitController extends BaseController {
   });
 
   delete = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { id } = habitIdSchema.parse(req.params);
     const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Habit not found");
+      return;
+    }
+    const { id } = habitIdSchema.parse(req.params);
     
-    const existing = userId
-      ? db.findOne("habits", { id, user_id: userId })
-      : db.findOne("habits", { id });
+    const existing = db.findOne("habits", { id, user_id: userId });
       
     if (!existing) {
       this.notFound(res, "Habit not found");
@@ -85,13 +97,15 @@ class HabitController extends BaseController {
   });
 
   logCompletion = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Habit not found");
+      return;
+    }
     const { id } = habitIdSchema.parse(req.params);
     const { notes } = req.body;
-    const userId = req.user?.id;
     
-    const habit = userId
-      ? db.findOne("habits", { id, user_id: userId })
-      : db.findOne("habits", { id });
+    const habit = db.findOne("habits", { id, user_id: userId });
       
     if (!habit) {
       this.notFound(res, "Habit not found");
@@ -100,18 +114,21 @@ class HabitController extends BaseController {
     
     const log = db.create("habit_logs", { 
       habit_id: id, 
-      notes: notes || null 
+      notes: notes || null,
+      user_id: userId 
     });
     this.created(res, log);
   });
 
   getLogs = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { id } = habitIdSchema.parse(req.params);
     const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Habit not found");
+      return;
+    }
+    const { id } = habitIdSchema.parse(req.params);
     
-    const habit = userId
-      ? db.findOne("habits", { id, user_id: userId })
-      : db.findOne("habits", { id });
+    const habit = db.findOne("habits", { id, user_id: userId });
       
     if (!habit) {
       this.notFound(res, "Habit not found");
@@ -129,8 +146,8 @@ class HabitController extends BaseController {
       return this.ok(res, { rate: 0 });
     }
 
-    // Get total habits
-    const habits = db.findMany("habits", { user_id: userId });
+    // Get total habits for user
+    const habits = db.findMany<{ id: number; frequency: string }>("habits", { user_id: userId });
     if (habits.length === 0) {
       return this.ok(res, { rate: 0 });
     }
@@ -153,7 +170,7 @@ class HabitController extends BaseController {
         totalExpected += 0.25;
       }
 
-      const logs = db.query(
+      const logs = db.query<{ count: number }>(
         "SELECT COUNT(*) as count FROM habit_logs WHERE habit_id = ? AND completed_at >= ?",
         [habit.id, dateStr]
       );

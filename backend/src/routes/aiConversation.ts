@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { aiConversationController } from "../controllers/index.js";
+import { aiConversationController } from "../controllers/Index.js";
 import { validateParams } from "../middleware/index.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { z } from "zod";

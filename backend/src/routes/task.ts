@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { taskController } from "../controllers/index.js";
+import { taskController } from "../controllers/Index.js";
 import { validateBody } from "../middleware/index.js";
 import { optionalAuthMiddleware } from "../middleware/auth.js";
 import { z } from "zod";

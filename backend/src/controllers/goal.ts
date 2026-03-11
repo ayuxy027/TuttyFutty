@@ -20,19 +20,22 @@ const goalIdSchema = z.object({
 class GoalController extends BaseController {
   getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
-    const goals = userId 
-      ? db.query("SELECT * FROM goals WHERE user_id = ? OR user_id IS NULL ORDER BY priority DESC, created_at DESC", userId)
-      : db.findMany("goals", {});
+    if (!userId) {
+      this.ok(res, []);
+      return;
+    }
+    const goals = db.query("SELECT * FROM goals WHERE user_id = ? ORDER BY priority DESC, created_at DESC", userId);
     this.ok(res, goals);
   });
 
   getById = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { id } = goalIdSchema.parse(req.params);
     const userId = req.user?.id;
-    
-    const goal = userId
-      ? db.findOne("goals", { id, user_id: userId })
-      : db.findOne("goals", { id });
+    if (!userId) {
+      this.notFound(res, "Goal not found");
+      return;
+    }
+    const { id } = goalIdSchema.parse(req.params);
+    const goal = db.findOne("goals", { id, user_id: userId });
     
     if (!goal) {
       this.notFound(res, "Goal not found");
@@ -43,22 +46,29 @@ class GoalController extends BaseController {
   });
 
   create = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.unauthorized(res, "Authentication required");
+      return;
+    }
     const data = goalSchema.parse(req.body);
     const goal = db.create("goals", {
       ...data,
-      user_id: req.user?.id || null,
+      user_id: userId,
     });
     this.created(res, goal);
   });
 
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Goal not found");
+      return;
+    }
     const { id } = goalIdSchema.parse(req.params);
     const data = goalSchema.partial().parse(req.body);
-    const userId = req.user?.id;
     
-    const existing = userId
-      ? db.findOne("goals", { id, user_id: userId })
-      : db.findOne("goals", { id });
+    const existing = db.findOne("goals", { id, user_id: userId });
       
     if (!existing) {
       this.notFound(res, "Goal not found");
@@ -70,12 +80,14 @@ class GoalController extends BaseController {
   });
 
   delete = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { id } = goalIdSchema.parse(req.params);
     const userId = req.user?.id;
+    if (!userId) {
+      this.notFound(res, "Goal not found");
+      return;
+    }
+    const { id } = goalIdSchema.parse(req.params);
     
-    const existing = userId
-      ? db.findOne("goals", { id, user_id: userId })
-      : db.findOne("goals", { id });
+    const existing = db.findOne("goals", { id, user_id: userId });
       
     if (!existing) {
       this.notFound(res, "Goal not found");
