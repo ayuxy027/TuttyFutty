@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check, Trash2, Clock } from "lucide-react";
+import { Plus, Check, Trash2, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
 type Priority = "low" | "medium" | "high";
@@ -14,9 +14,9 @@ interface Task {
 }
 
 const priorityStyles: Record<Priority, string> = {
-  low: "border-boundary",
-  medium: "border-foreground/30",
-  high: "border-primary",
+  low: "border-l-muted-foreground/30",
+  medium: "border-l-foreground/30",
+  high: "border-l-foreground",
 };
 
 const DailyPlanner = () => {
@@ -41,24 +41,30 @@ const DailyPlanner = () => {
   const doneCount = tasks.filter((t) => t.done).length;
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-boundary px-grid-3 py-grid-2">
-        <h2 className="font-mono text-sm font-semibold text-primary">Planner</h2>
-        <span className="font-mono text-[10px] text-muted-foreground">
-          {format(new Date(), "EEE, MMM d")} - {doneCount}/{tasks.length}
-        </span>
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h2 className="font-mono text-sm font-semibold text-foreground">Planner</h2>
+        <div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
+          <Calendar size={12} />
+          <span>{format(new Date(), "EEE, MMM d")}</span>
+          <span>·</span>
+          <span>{doneCount}/{tasks.length}</span>
+        </div>
       </div>
 
-      <div className="h-[2px] bg-boundary">
+      {/* Progress bar */}
+      <div className="h-[2px] bg-border">
         <motion.div
-          className="h-full bg-primary"
+          className="h-full bg-foreground"
           animate={{ width: `${tasks.length ? (doneCount / tasks.length) * 100 : 0}%` }}
           transition={{ duration: 0.4 }}
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-grid-3 py-grid-3">
-        <div className="mx-auto flex max-w-[560px] flex-col gap-grid">
+      {/* Tasks */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="mx-auto flex max-w-[600px] flex-col gap-2">
           <AnimatePresence mode="popLayout">
             {tasks
               .sort((a, b) => {
@@ -74,30 +80,30 @@ const DailyPlanner = () => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -16 }}
-                  className={`flex items-center gap-grid-2 rounded-lg border-l-2 bg-cell px-grid-3 py-grid-2 ${
+                  className={`group flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 border-l-4 ${
                     priorityStyles[task.priority]
                   } ${task.done ? "opacity-50" : ""}`}
                 >
                   <button
                     onClick={() => toggle(task.id)}
-                    className={`flex h-grid-2 w-grid-2 flex-shrink-0 items-center justify-center rounded border transition-colors ${
+                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border transition-colors ${
                       task.done
-                        ? "border-primary bg-primary"
-                        : "border-boundary hover:border-primary"
+                        ? "border-foreground bg-foreground"
+                        : "border-border hover:border-foreground"
                     }`}
                   >
-                    {task.done && <Check size={8} className="text-primary-foreground" />}
+                    {task.done && <Check size={10} className="text-background" />}
                   </button>
 
                   {task.timeBlock && (
-                    <span className="flex items-center gap-[2px] font-mono text-[10px] text-muted-foreground">
-                      <Clock size={8} />
+                    <span className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+                      <Clock size={10} />
                       {task.timeBlock}
                     </span>
                   )}
 
                   <span
-                    className={`flex-1 font-body text-xs ${
+                    className={`flex-1 text-sm ${
                       task.done ? "text-muted-foreground line-through" : "text-foreground"
                     }`}
                   >
@@ -106,53 +112,59 @@ const DailyPlanner = () => {
 
                   <button
                     onClick={() => remove(task.id)}
-                    className="flex-shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive"
-                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
+                    className="flex-shrink-0 text-muted-foreground opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={14} />
                   </button>
                 </motion.div>
               ))}
           </AnimatePresence>
 
           {tasks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-grid-4 text-center">
-              <p className="font-mono text-xs text-muted-foreground">No tasks yet</p>
-              <p className="font-mono text-[10px] text-muted-foreground">Add your first task below</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="font-mono text-sm text-muted-foreground">No tasks yet</p>
+              <p className="font-mono text-xs text-muted-foreground mt-1">Add your first task below</p>
             </div>
           )}
+        </div>
+      </div>
 
-          <div className="flex gap-grid">
-            <div className="flex gap-grid rounded-lg border border-boundary bg-cell p-grid">
-              {(["low", "medium", "high"] as Priority[]).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setNewPriority(p)}
-                  className={`rounded px-grid py-[2px] font-mono text-[9px] uppercase transition-colors ${
-                    newPriority === p
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-primary"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-            <input
-              value={newText}
-              onChange={(e) => setNewText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && add()}
-              placeholder="Add task..."
-              className="flex-1 rounded-lg border border-boundary bg-cell px-grid-2 py-grid font-body text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <button
-              onClick={add}
-              className="rounded-lg border border-boundary px-grid-2 text-muted-foreground hover:border-primary hover:text-primary"
-            >
-              <Plus size={14} />
-            </button>
+      {/* Add Task Bar */}
+      <div className="border-t border-border bg-muted/20 p-4">
+        <div className="mx-auto flex max-w-[600px] gap-2">
+          {/* Priority Selector */}
+          <div className="flex rounded-md border border-border bg-background p-1">
+            {(["low", "medium", "high"] as Priority[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setNewPriority(p)}
+                className={`rounded px-2 py-1 font-mono text-[9px] uppercase transition-colors ${
+                  newPriority === p
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
           </div>
+
+          {/* Input */}
+          <input
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && add()}
+            placeholder="Add a task..."
+            className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+          />
+
+          {/* Add Button */}
+          <button
+            onClick={add}
+            className="rounded-md border border-border bg-background px-3 text-muted-foreground hover:border-foreground hover:text-foreground transition-colors"
+          >
+            <Plus size={16} />
+          </button>
         </div>
       </div>
     </div>

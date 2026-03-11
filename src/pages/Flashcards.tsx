@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, Check, X, Shuffle, Loader2, Calendar, Sparkles } from "lucide-react";
 import { format, subMonths, addMonths } from "date-fns";
 import { apiRequest } from "../lib/api";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Flashcard {
   id: string;
@@ -34,6 +36,8 @@ const Flashcards = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [generating, setGenerating] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [topic, setTopic] = useState("");
 
   useEffect(() => {
     fetchDates();
@@ -95,11 +99,12 @@ const Flashcards = () => {
   };
 
   const generateFlashcards = async () => {
-    const topic = prompt("Enter topic for flashcards:");
-    if (!topic) return;
-    
+    if (!topic.trim()) return;
+
     try {
       setGenerating(true);
+      setShowGenerateModal(false);
+      setTopic("");
       await apiRequest<{ message: string; data: ApiFlashcard[] }>("/flashcards/generate", {
         method: "POST",
         body: JSON.stringify({ topic, count: 5, deck_name: topic }),
@@ -111,6 +116,11 @@ const Flashcards = () => {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const openGenerateModal = () => {
+    setShowGenerateModal(true);
+    setTopic("");
   };
 
   const current = cards[currentIndex];
@@ -176,7 +186,7 @@ const Flashcards = () => {
         <div className="flex flex-col items-center justify-center gap-grid-3 py-grid-4 text-center">
           <p className="font-body text-xs text-muted-foreground">No flashcards for this date</p>
           <button
-            onClick={generateFlashcards}
+            onClick={openGenerateModal}
             className="flex items-center gap-grid rounded-lg border border-primary bg-primary px-grid-3 py-grid-2 font-mono text-xs text-primary-foreground"
           >
             <Sparkles size={12} />
@@ -280,7 +290,7 @@ const Flashcards = () => {
             <Calendar size={12} />
           </button>
           <button
-            onClick={generateFlashcards}
+            onClick={openGenerateModal}
             className="text-muted-foreground hover:text-primary"
             title="Generate with AI"
           >
@@ -364,6 +374,71 @@ const Flashcards = () => {
       <div className="flex flex-1 flex-col items-center justify-center px-grid-3 py-grid-3">
         {renderContent()}
       </div>
+
+      {/* Generate Flashcards Modal */}
+      <AnimatePresence>
+        {showGenerateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setShowGenerateModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="font-mono text-sm font-semibold mb-4">Generate Flashcards</h3>
+              <p className="text-xs text-muted-foreground mb-4">Enter a topic and AI will generate flashcards for you.</p>
+
+              <Input
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="e.g., React Hooks, JavaScript closures..."
+                className="mb-4"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && topic.trim()) {
+                    generateFlashcards();
+                  }
+                }}
+                autoFocus
+              />
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowGenerateModal(false)}
+                  className="border-black text-black hover:bg-transparent hover:border-black"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={generateFlashcards}
+                  disabled={!topic.trim() || generating}
+                  className="border-black text-black hover:bg-transparent hover:border-black"
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 size={14} className="mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={14} className="mr-2" />
+                      Generate
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
