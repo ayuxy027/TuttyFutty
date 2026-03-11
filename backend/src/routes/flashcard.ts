@@ -26,11 +26,21 @@ const createManySchema = z.object({
   })),
 });
 
+const generateSchema = z.object({
+  topic: z.string().min(1),
+  count: z.number().int().min(1).max(20).default(5),
+  deck_name: z.string().min(1),
+  card_date: z.string().optional(),
+});
+
 router.get("/", optionalAuthMiddleware, flashcardController.getAll);
+router.get("/dates", optionalAuthMiddleware, flashcardController.getDates);
+router.get("/date/:date", optionalAuthMiddleware, flashcardController.getByDate);
 router.get("/decks", optionalAuthMiddleware, flashcardController.getDecks);
 router.get("/deck/:deckName", optionalAuthMiddleware, validateParams(z.object({ deckName: z.string() })), flashcardController.getByDeck);
 router.get("/:id", optionalAuthMiddleware, validateParams(flashcardIdSchema), flashcardController.getById);
 router.post("/", optionalAuthMiddleware, validateBody(flashcardSchema), flashcardController.create);
+router.post("/generate", optionalAuthMiddleware, validateBody(generateSchema), flashcardController.generate);
 router.post("/bulk", optionalAuthMiddleware, validateBody(createManySchema), flashcardController.createMany);
 router.patch("/:id", optionalAuthMiddleware, validateParams(flashcardIdSchema), validateBody(flashcardSchema.partial()), flashcardController.update);
 router.delete("/:id", optionalAuthMiddleware, validateParams(flashcardIdSchema), flashcardController.delete);

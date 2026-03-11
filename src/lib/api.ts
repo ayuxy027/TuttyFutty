@@ -269,6 +269,16 @@ export const flashcards = {
 
   getByDeck: (deckName: string) => apiRequest<Flashcard[]>(`/flashcards?deck_name=${encodeURIComponent(deckName)}`),
 
+  getDates: () => apiRequest<string[]>("/flashcards/dates"),
+
+  getByDate: (date: string) => apiRequest<Flashcard[]>(`/flashcards/date/${date}`),
+
+  generate: (topic: string, count: number, deckName: string) =>
+    apiRequest<Flashcard[]>("/flashcards/generate", { 
+      method: "POST", 
+      body: JSON.stringify({ topic, count, deck_name: deckName }) 
+    }),
+
   create: (data: FlashcardCreateRequest) =>
     apiRequest<Flashcard>("/flashcards", { method: "POST", body: JSON.stringify(data) }),
 
