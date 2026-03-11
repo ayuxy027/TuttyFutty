@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { HelpCircle, X, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { HelpCircle, X, Check, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { quiz } from "../../lib/api";
 
 interface Cell {
   id: string;
@@ -13,21 +14,40 @@ interface CellQuizProps {
   onRemove: () => void;
 }
 
-const mockQuiz = {
-  question:
-    "What does the FLP impossibility result state about distributed consensus?",
-  options: [
-    "Consensus is impossible in synchronous systems",
-    "No deterministic algorithm can guarantee consensus in an asynchronous system with even one faulty process",
-    "All consensus algorithms require at least 3 nodes",
-    "Byzantine fault tolerance requires 2f+1 nodes",
-  ],
-  correct: 1,
-};
-
 const CellQuiz = ({ cell, onRemove }: CellQuizProps) => {
   const [selected, setSelected] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [quizData, setQuizData] = useState<quiz.QuizQuestion | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchQuiz = async () => {
+      try {
+        setLoading(true);
+        // Try to parse quiz data from cell content first
+        let parsed: quiz.QuizQuestion | null = null;
+        try {
+          parsed = JSON.parse(cell.content);
+        } catch {
+          // If content is not JSON, it's empty - generate a new quiz via API
+        }
+
+        if (parsed && parsed.question && parsed.options) {
+          setQuizData(parsed);
+        } else {
+          // Fetch a quiz from the AI API
+          const data = await quiz.generate();
+          setQuizData(data);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load quiz");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuiz();
+  }, [cell.content]);
 
   const handleSelect = (index: number) => {
     if (submitted) return;
@@ -38,6 +58,46 @@ const CellQuiz = ({ cell, onRemove }: CellQuizProps) => {
     if (selected === null) return;
     setSubmitted(true);
   };
+
+  if (loading) {
+    return (
+      <div className="rounded-lg border border-cell-border bg-cell p-grid-3">
+        <div className="mb-grid-2 flex items-center justify-between">
+          <div className="flex items-center gap-grid">
+            <HelpCircle size={12} strokeWidth={1.5} className="text-muted-foreground" />
+            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              Quiz
+            </span>
+          </div>
+          <button onClick={onRemove} className="text-muted-foreground hover:text-primary">
+            <X size={12} />
+          </button>
+        </div>
+        <div className="flex items-center justify-center py-grid-3">
+          <Loader2 className="animate-spin text-muted-foreground" size={20} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !quizData) {
+    return (
+      <div className="rounded-lg border border-cell-border bg-cell p-grid-3">
+        <div className="mb-grid-2 flex items-center justify-between">
+          <div className="flex items-center gap-grid">
+            <HelpCircle size={12} strokeWidth={1.5} className="text-muted-foreground" />
+            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              Quiz
+            </span>
+          </div>
+          <button onClick={onRemove} className="text-muted-foreground hover:text-primary">
+            <X size={12} />
+          </button>
+        </div>
+        <p className="font-body text-xs text-destructive">Failed to load quiz</p>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg border border-cell-border bg-cell p-grid-3">
@@ -57,13 +117,13 @@ const CellQuiz = ({ cell, onRemove }: CellQuizProps) => {
       </div>
 
       <p className="mb-grid-3 font-body text-xs font-medium leading-[20px] text-primary">
-        {mockQuiz.question}
+        {quizData.question}
       </p>
 
       <div className="flex flex-col gap-grid">
-        {mockQuiz.options.map((option, i) => {
-          const isCorrect = submitted && i === mockQuiz.correct;
-          const isWrong = submitted && i === selected && i !== mockQuiz.correct;
+        {quizData.options.map((option, i) => {
+          const isCorrect = submitted && i === quizData.correct;
+          const isWrong = submitted && i === selected && i !== quizData.correct;
 
           return (
             <motion.button
@@ -109,9 +169,9 @@ const CellQuiz = ({ cell, onRemove }: CellQuizProps) => {
           animate={{ opacity: 1 }}
           className="mt-grid-2 font-body text-[10px] text-muted-foreground"
         >
-          {selected === mockQuiz.correct
-            ? "Correct. The FLP result is foundational to understanding distributed systems limitations."
-            : "Incorrect. Review the FLP impossibility result — it specifically addresses asynchronous systems."}
+          {selected === quizData.correct
+            ? quizData.explanation || "Correct!"
+            : "Incorrect. Try reviewing the material and attempt again."}
         </motion.p>
       )}
     </div>
