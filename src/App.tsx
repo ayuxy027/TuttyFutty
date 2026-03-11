@@ -15,6 +15,8 @@ import DailyPlanner from "./pages/DailyPlanner";
 import HabitTracker from "./pages/HabitTracker";
 import Flashcards from "./pages/Flashcards";
 import WeeklyReview from "./pages/WeeklyReview";
+import AIChat from "./pages/AIChat";
+import HealthCheck from "./pages/HealthCheck";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +40,8 @@ const App = () => (
             <Route path="habits" element={<HabitTracker />} />
             <Route path="flashcards" element={<Flashcards />} />
             <Route path="review" element={<WeeklyReview />} />
+            <Route path="ai" element={<AIChat />} />
+            <Route path="health" element={<HealthCheck />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

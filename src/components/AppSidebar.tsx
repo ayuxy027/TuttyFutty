@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   Target, Calendar, BookOpen, ChevronLeft, ChevronRight,
   Moon, Sun, PenLine, ListChecks, Repeat, Layers, BarChart3,
+  Heart,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -23,6 +24,12 @@ const navSections = [
       { icon: Repeat, path: "/workspace/habits", label: "Habits" },
       { icon: PenLine, path: "/workspace/journal", label: "Journal" },
       { icon: BarChart3, path: "/workspace/review", label: "Review" },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { icon: Heart, path: "/workspace/health", label: "Health" },
     ],
   },
 ];
