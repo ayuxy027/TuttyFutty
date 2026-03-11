@@ -33,8 +33,9 @@ const CalendarView = () => {
     const fetchSessions = async () => {
       try {
         setLoading(true);
-        const data = await apiRequest<Session[]>("/sessions");
-        const dates = data.map((session) => new Date(session.session_date));
+        const response = await apiRequest<{ message: string; data: Session[] }>("/sessions");
+        const sessions = response.data || [];
+        const dates = sessions.map((session) => new Date(session.session_date));
         setSessionDays(dates);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load sessions");

@@ -45,8 +45,9 @@ const SprintView = () => {
 
       try {
         setLoading(true);
-        const goal = await apiRequest<Goal>(`/goals/${goalId}`);
-        setCurrentStep(goal.current_step || 1);
+        const response = await apiRequest<{ message: string; data: Goal }>(`/goals/${goalId}`);
+        const goal = response.data;
+        setCurrentStep(goal?.current_step || 1);
         
         // Generate steps based on goal
         setSteps([

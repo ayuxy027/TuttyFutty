@@ -31,8 +31,9 @@ const PracticeCenter = () => {
     const fetchQuizAttempts = async () => {
       try {
         setLoading(true);
-        const data = await apiRequest<QuizAttempt[]>("/ai/quiz/attempts");
-        const formatted: QuizResult[] = data.map((attempt) => ({
+        const response = await apiRequest<{ message: string; data: QuizAttempt[] }>("/ai/quiz/attempts");
+        const attempts = response.data || [];
+        const formatted: QuizResult[] = attempts.map((attempt) => ({
           id: String(attempt.id),
           question: attempt.question,
           correct: attempt.is_correct,

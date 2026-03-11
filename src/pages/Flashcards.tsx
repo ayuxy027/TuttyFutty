@@ -32,9 +32,10 @@ const Flashcards = () => {
     const fetchFlashcards = async () => {
       try {
         setLoading(true);
-        const data = await apiRequest<ApiFlashcard[]>("/flashcards");
+        const response = await apiRequest<{ message: string; data: ApiFlashcard[] }>("/flashcards");
+        const apiCards = response.data || [];
         const difficultyMap = ["easy", "medium", "hard"] as const;
-        const formatted: Flashcard[] = data.map((card) => ({
+        const formatted: Flashcard[] = apiCards.map((card) => ({
           id: String(card.id),
           front: card.front,
           back: card.back,

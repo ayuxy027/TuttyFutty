@@ -24,23 +24,22 @@ const WeeklyReview = () => {
     const fetchWeeklyStats = async () => {
       try {
         setLoading(true);
-        // Fetch multiple data sources in parallel
         const [tasksRes, habitsRes, sessionsRes, journalRes] = await Promise.all([
-          apiRequest<{ completed: number; total: number }[]>("/tasks"),
-          apiRequest<{ rate: number }[]>("/habits/stats"),
-          apiRequest<{ count: number; minutes: number }[]>("/sessions/stats"),
-          apiRequest<{ count: number }[]>("/journal/stats"),
+          apiRequest<{ message: string; data: { completed: number; total: number }[] }>("/tasks/stats"),
+          apiRequest<{ message: string; data: { rate: number }[] }>("/habits/stats"),
+          apiRequest<{ message: string; data: { count: number; minutes: number }[] }>("/sessions/stats"),
+          apiRequest<{ message: string; data: { count: number }[] }>("/journal/stats"),
         ]);
         
         setStats({
-          tasksCompleted: tasksRes[0]?.completed || 0,
-          tasksTotal: tasksRes[0]?.total || 0,
-          habitsRate: habitsRes[0]?.rate || 0,
-          studySessions: sessionsRes[0]?.count || 0,
+          tasksCompleted: tasksRes.data?.[0]?.completed || 0,
+          tasksTotal: tasksRes.data?.[0]?.total || 0,
+          habitsRate: habitsRes.data?.[0]?.rate || 0,
+          studySessions: sessionsRes.data?.[0]?.count || 0,
           quizzesPassed: 0,
           quizzesFailed: 0,
-          journalEntries: journalRes[0]?.count || 0,
-          focusMinutes: sessionsRes[0]?.minutes || 0,
+          journalEntries: journalRes.data?.[0]?.count || 0,
+          focusMinutes: sessionsRes.data?.[0]?.minutes || 0,
           streak: 0,
         });
       } catch (err) {
