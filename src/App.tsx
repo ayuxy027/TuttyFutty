@@ -18,6 +18,7 @@ import Flashcards from "./pages/Flashcards";
 import WeeklyReview from "./pages/WeeklyReview";
 import AIChat from "./pages/AIChat";
 import HealthCheck from "./pages/HealthCheck";
+import Encryption from "./pages/Encryption";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="review" element={<WeeklyReview />} />
             <Route path="ai" element={<AIChat />} />
             <Route path="health" element={<HealthCheck />} />
+            <Route path="encryption" element={<Encryption />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   Target, Calendar, BookOpen, ChevronLeft, ChevronRight,
   Moon, Sun, PenLine, ListChecks, Repeat, Layers, BarChart3,
-  Heart, LogOut,
+  Heart, LogOut, Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -31,6 +31,7 @@ const navSections = [
     label: "System",
     items: [
       { icon: Heart, path: "/workspace/health", label: "Health" },
+      { icon: Shield, path: "/workspace/encryption", label: "Encryption" },
     ],
   },
 ];
@@ -48,23 +49,23 @@ const AppSidebar = () => {
 
   return (
     <motion.aside
-      animate={{ width: collapsed ? 48 : 200 }}
-      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-      className="flex h-screen flex-col border-r border-boundary bg-ground"
+      animate={{ width: collapsed ? 48 : 180 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
+      className="flex h-screen flex-col border-r border-border bg-muted/20"
     >
       {/* Logo */}
-      <div className="flex h-grid-6 items-center border-b border-boundary px-grid-2">
-        {!collapsed && (
-          <span className="font-mono text-xs font-semibold text-primary">TuttyFutty</span>
-        )}
+      <div className="flex h-12 items-center border-b border-border px-3">
+        <span className="font-mono text-xs font-semibold text-foreground">
+          {collapsed ? "TF" : "TuttyFutty"}
+        </span>
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col gap-grid-2 overflow-y-auto px-grid py-grid-2">
+      <nav className="flex flex-1 flex-col gap-3 overflow-y-auto px-2 py-3">
         {navSections.map((section) => (
           <div key={section.label}>
             {!collapsed && (
-              <span className="mb-grid block px-grid font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+              <span className="mb-2 block px-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
                 {section.label}
               </span>
             )}
@@ -75,14 +76,14 @@ const AppSidebar = () => {
                   <button
                     key={path}
                     onClick={() => navigate(path)}
-                    className={`flex items-center gap-grid-2 rounded-lg px-grid-2 py-grid transition-colors ${
+                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors ${
                       isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground hover:bg-accent"
+                        ? "bg-foreground text-background"
+                        : "text-foreground hover:bg-muted"
                     }`}
                   >
                     <Icon size={14} strokeWidth={1.5} />
-                    {!collapsed && <span className="font-mono text-[11px]">{label}</span>}
+                    {!collapsed && <span className="font-mono">{label}</span>}
                   </button>
                 );
               })}
@@ -92,24 +93,24 @@ const AppSidebar = () => {
       </nav>
 
       {/* Dark mode + Collapse + Logout */}
-      <div className="flex flex-col border-t border-boundary">
+      <div className="flex flex-col border-t border-border">
         <button
           onClick={() => document.documentElement.classList.toggle("dark")}
-          className="flex h-grid-5 items-center justify-center text-muted-foreground hover:text-primary"
+          className="flex h-9 items-center justify-center text-muted-foreground hover:text-foreground"
         >
           <Sun size={14} className="hidden dark:block" />
           <Moon size={14} className="block dark:hidden" />
         </button>
         <button
           onClick={handleLogout}
-          className="flex h-grid-5 items-center justify-center text-muted-foreground hover:text-primary"
+          className="flex h-9 items-center justify-center text-muted-foreground hover:text-foreground"
           title="Logout"
         >
           <LogOut size={14} />
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex h-grid-5 items-center justify-center text-muted-foreground hover:text-primary"
+          className="flex h-9 items-center justify-center text-muted-foreground hover:text-foreground"
         >
           {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
