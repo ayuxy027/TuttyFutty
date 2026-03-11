@@ -83,7 +83,7 @@ class AiController extends BaseController {
     const { prompt, conversation_id } = generateSchema.parse(req.body);
     const userId = req.user?.id;
     
-    let result = await generateContent(prompt);
+    const result = await generateContent(prompt);
     
     if (!result) {
       throw createError("Gemini API not configured", 503, "SERVICE_UNAVAILABLE");
@@ -169,7 +169,7 @@ class AiController extends BaseController {
     const { messages, conversation_id } = chatSchema.parse(req.body);
     const userId = req.user?.id;
     
-    let result = await chatGenerateContent(messages);
+    const result = await chatGenerateContent(messages);
     
     if (!result) {
       throw createError("Gemini API not configured", 503, "SERVICE_UNAVAILABLE");

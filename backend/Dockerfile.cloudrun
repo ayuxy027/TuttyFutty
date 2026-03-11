@@ -1,0 +1,52 @@
+# Cloud Run optimized Dockerfile
+# Uses a minimal base image and runs as non-root
+
+# Build stage
+FROM oven/bun:1 AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json bun.lock ./
+
+# Install dependencies
+RUN bun install --frozen-lockfile
+
+# Copy source
+COPY src/ ./src/
+COPY sqlite/ ./sqlite/
+
+# Production stage
+FROM oven/bun:1-slim
+
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Copy installed dependencies and source
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/sqlite ./sqlite
+COPY --from=builder /app/package.json ./
+
+# Set ownership
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port (Cloud Run provides PORT env var)
+EXPOSE 8080
+
+# Environment variables
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Health check for Cloud Run
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/ || exit 1
+
+# Start command
+CMD ["bun", "run", "src/index.ts"]
