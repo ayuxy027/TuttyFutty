@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, Check, X, Shuffle, Loader2, Calendar, Sparkles } from "lucide-react";
 import { format, subMonths, addMonths } from "date-fns";
 import { apiRequest } from "../lib/api";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 interface Flashcard {
   id: string;

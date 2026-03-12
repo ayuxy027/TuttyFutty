@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { checkAllEndpoints, type HealthCheckResult, type EndpointStatus } from "../lib/health";
 import { RefreshCw, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 
 const StatusIcon = ({ status }: { status: EndpointStatus["status"] }) => {
   switch (status) {
