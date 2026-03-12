@@ -589,6 +589,32 @@ describe("E2E Tests - SQLite Database Coverage", () => {
   });
 
   // ============================================
+  // AI VALIDATION TESTS
+  // ============================================
+  describe("AI Input Validation", () => {
+    it("should reject empty prompt", async () => {
+      const res = await request(app)
+        .post(`${API_BASE}/ai/generate`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ prompt: "" });
+      
+      expect(res.status).toBe(400);
+    });
+
+    it("should require prompt field", async () => {
+      const res = await request(app)
+        .post(`${API_BASE}/ai/generate`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({});
+      
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ============================================
+  // NEGATIVE TESTS - Error Handling
+
+  // ============================================
   // USER SESSIONS (Tracking)
   // ============================================
   describe("User Sessions Tracking CRUD", () => {
